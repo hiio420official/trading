@@ -12,12 +12,16 @@ from pywinauto import application
 import locale
 import os
 import time
+from config import stock
 
 class Cybos:
     g_objCpStatus = None
 
     def __init__(self):
         self.g_objCpStatus = win32com.client.Dispatch('CpUtil.CpCybos')
+        self.ID = stock.ID
+        self.PW = stock.PW
+        self.CERTPW = stock.CERTPW
 
     def kill_client(self):
         print("########## 기존 CYBOS 프로세스 강제 종료")
@@ -28,7 +32,7 @@ class Cybos:
         os.system('wmic process where "name like \'%CpStart%\'" call terminate')
         os.system('wmic process where "name like \'%DibServer%\'" call terminate')
 
-    def connect(self, id_, pwd,pwdcert):
+    def connect(self):
         if not self.connected():
             self.disconnect()
             self.kill_client()
@@ -37,7 +41,7 @@ class Cybos:
             app = application.Application()
             # cybos plus를 정보 조회로만 사용했기 때문에 인증서 비밀번호는 입력하지 않았다.
             app.start(
-            'C:\Daishin\Starter\\ncStarter.exe /prj:cp /id:{id} /pwd:{pwd} /pwdcert:{pwdcert} /autostart'.format(id=id_, pwd=pwd,pwdcert=pwdcert)
+            f'C:\Daishin\Starter\\ncStarter.exe /prj:cp /id:{self.ID} /pwd:{self.PW} /pwdcert:{self.CERTPW} /autostart'
             )
             while not self.connected():
                 time.sleep(1)
@@ -80,3 +84,40 @@ class Cybos:
             Win32Function.close_win("AhnLab Online Security")
         else:
             print("없습니다.")
+
+    
+    def run(self):
+        t = Thread(target=self.connect)
+        t.start()
+        t.join()
+
+
+
+class StockCodeName(Cybos):
+    
+    def __init__(self):
+        super().__init__()
+    
+    
+    def get(self):
+        if not self.connected():
+            print("self.stockConn.conn",self.connected())
+            return 
+        else:
+            print("접속중")
+        # 종목코드 리스트 구하기
+        objCpCodeMgr = win32com.client.Dispatch("CpUtil.CpCodeMgr")
+        codeList = objCpCodeMgr.GetStockListByMarket(1) #거래소
+        codeList2 = objCpCodeMgr.GetStockListByMarket(2) #코스닥
+        data = []
+        print("거래소 종목코드", len(codeList))
+        for i, code in enumerate(codeList):
+            secondCode = objCpCodeMgr.GetStockSectionKind(code)
+            name = objCpCodeMgr.CodeToName(code)
+            
+            stdPrice = objCpCodeMgr.GetStockStdPrice(code)
+            data += [{"code":code,"name":name}]
+            
+        return data
+
+ 
