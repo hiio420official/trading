@@ -1,4 +1,4 @@
-from libs.cybos import StockCodeName
+from app.cybos import StockCodeName
 
 if __name__ == "__main__":
     

@@ -11,6 +11,7 @@ def find_window(title):
 
 
 def check_window(title, secs=5):
+    print(title)
     global title_hwnd
     i = 0
     while i < secs:
