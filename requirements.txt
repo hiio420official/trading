@@ -5,11 +5,10 @@ Pillow
 psutil
 PyJWT
 pymongo
-PyMySQL
+pymysql
 requests
 tqdm
 pywin32
-mariadb
 sqlalchemy
 python-dotenv
 pywinauto
