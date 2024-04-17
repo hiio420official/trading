@@ -1,8 +1,5 @@
 from .cybos.StockCodeName import StockCodeName
-from .database.Core import engine,BaseEntity
-
-BaseEntity.metadata.create_all(bind=engine)
-
+# from .database.Core import engine,BaseEntity
 
 com = StockCodeName()
 data = com.get()
