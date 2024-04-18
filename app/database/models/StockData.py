@@ -1,4 +1,4 @@
-from sqlalchemy import Column, ForeignKey, String, DOUBLE, PrimaryKeyConstraint
+from sqlalchemy import Column, ForeignKey, String, DOUBLE, PrimaryKeyConstraint, Integer
 from sqlalchemy.orm import relationship
 
 from ..Core import BaseEntity
@@ -9,8 +9,8 @@ class StockChartEntity(BaseEntity):
 
     code = Column("CODE", String(20), ForeignKey('TB_STOCK_CODE.CODE'), comment="코드")
     codeItem = relationship("StockCodeEntity", backref="stockChart")
-    date = Column("DATE", String(8),default=0.0)
-    time = Column("TIME", String(4), default=0.0)
+    date = Column("DATE", Integer,default=0.0)
+    time = Column("TIME", Integer, default=0.0)
     startPrice = Column("START_PRICE", DOUBLE, default=0.0)
     highPrice = Column("HIGHP_RICE", DOUBLE, default=0.0)
     lowPrice = Column("LOW_PRICE", DOUBLE, default=0.0)

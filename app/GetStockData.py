@@ -78,7 +78,7 @@ threads = [Thread(target=requestCode),
            Thread(target=requestData),
            Thread(target=requestData)
            ]
-for _ in range(5):
+for _ in range(20):
     threads.append(Thread(target=saveData))
 
 for t in threads:

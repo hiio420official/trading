@@ -12,8 +12,8 @@ app = FastAPI()
 
 class Items(BaseModel):
     code: Optional[str]
-    date: Optional[str]
-    time: Optional[str]
+    date: Optional[int]
+    time: Optional[int]
     startPrice: Optional[float]
     highPrice: Optional[float]
     lowPrice: Optional[float]
