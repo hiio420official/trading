@@ -2,6 +2,7 @@ from typing import Optional, List
 
 from pydantic import BaseModel
 from sqlalchemy import select
+from starlette.middleware.cors import CORSMiddleware
 
 from .database.Core import SessionLocal
 from .database.models.StockData import StockChartEntity
@@ -14,10 +15,10 @@ class Items(BaseModel):
     code: Optional[str]
     date: Optional[int]
     time: Optional[int]
-    startPrice: Optional[float]
-    highPrice: Optional[float]
-    lowPrice: Optional[float]
-    closePrice: Optional[float]
+    open: Optional[float]
+    high: Optional[float]
+    low: Optional[float]
+    close: Optional[float]
     comparedToThePreviousDay: Optional[float]
     volume: Optional[float]
     tradingValue: Optional[float]
@@ -44,10 +45,16 @@ class Items(BaseModel):
 
     class Config:
         from_attribute = True
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
 
-
+)
 @app.get(path="/", response_model=List[Items])
-def index():
+def index(code:Optional[str],offset:Optional[int] = 0,limit:Optional[int] =0):
     with SessionLocal() as session:
-        return session.query(StockChartEntity).filter(StockChartEntity.code == "A000020").order_by(
-            StockChartEntity.date.desc(), StockChartEntity.time.desc()).offset(0).limit(100).all()
+        return session.query(StockChartEntity).filter(StockChartEntity.code == code).order_by(
+            StockChartEntity.date.desc(), StockChartEntity.time.desc()).offset(offset).limit(limit).all()
