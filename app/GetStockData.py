@@ -10,6 +10,8 @@ from .database import StockCodeEntity, StockChartEntity
 from .database.Core import SessionLocal
 from multiprocessing import Pool, cpu_count
 
+from .database.service.CodeService import get_code_name_list
+
 
 class ThreadWrapper:
     def __init__(self, code_list):
@@ -26,72 +28,58 @@ class ThreadWrapper:
 
 
 datas = []
+codeList = []
 
 
-def getData():
+def getData(code):
     global datas
-    with SessionLocal() as session:
-        li = session.execute(select(StockCodeEntity)).all()
+    maxDate = datetime.now().strftime('%Y%m%d')
+    task = StockChartData(maxDate)
+    datas += task.get(code)
+    while task.obj.Continue:
+        datas += task.get(code)
+    # datas += data
 
-        li = [la[0].code for la in li]
-        # li = ["A000020"]
-        maxDate = datetime.now().strftime('%Y%m%d')
-        size = 5
-        rn = len(li) // size
+def requestCode():
+    global codeList,codes
+    codes = [c[0].code for c in get_code_name_list()]
+    start = time.time()
+    print(f"requestCode Start {len(codes)}")
+    while len(codes) > 0:
+        if time.time() - start > 1:
+            codeList.append(codes.pop(0))
 
-        print(len(li))
-        for code in li:
-            task = StockChartData(maxDate)
-            datas +=task.get(code)
-            while task.obj.Continue:
-                datas +=task.get(code)
+
+def requestData():
+    global codeList
+    print("requestData Start")
+    while True:
+        if len(codeList) > 0:
+            code = codeList.pop(0)
+            getData(code)
 
 
 def saveData():
+    print("saveData Start")
     with SessionLocal() as session:
         while True:
-            print(f"\r{len(datas)}",end="")
-            if len(datas)>0:
-
+            print(f"\r{len(datas)}\r", end="")
+            if len(datas) > 0:
                 d = datas.pop(0)
-
                 smpt = select(StockChartEntity).filter(and_(
                     StockChartEntity.code == d.code, StockChartEntity.date == d.date, StockChartEntity.time == d.time))
                 c = session.execute(smpt).all()
-
                 if c.__len__() == 0:
-                    print(d.code, d.date, d.time, len(c))
                     session.add(d)
                     session.commit()
 
 
-threads = [Thread(target=getData)]
-for _ in range(100):
+threads = [Thread(target=requestCode),
+           Thread(target=requestData),
+           Thread(target=requestData)
+           ]
+for _ in range(5):
     threads.append(Thread(target=saveData))
 
 for t in threads:
     t.start()
-
-# for i in range(size):
-#     if i == size - 1:
-#         comma = li[i * rn:]
-#     else:
-#         comma = li[i * rn:(i + 1) * rn]
-#     print(len(comma))
-#     t = ThreadWrapper(comma)
-#     asyncio.run(t.run())
-# threads.append(asyncio.create_task(t.run()))
-# await asyncio.wait()
-# await asyncio.gather(*threads)
-# asyncio.run(main())
-#     print(len(comma))
-#     threads.append(t)
-# for t in threads:
-#     t.start()
-#     t.join()
-# for code in li:
-#
-#
-#     print(maxDate)
-#     task = StockChartData(code, maxDate)
-#     task()

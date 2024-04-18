@@ -12,3 +12,5 @@ pywin32
 sqlalchemy
 python-dotenv
 pywinauto
+fastapi
+uvicorn[standard]
