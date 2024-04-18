@@ -38,29 +38,27 @@ class StockChartData(Cybos):
         rqRet = self.obj.GetDibMsg1()
 
         data = self.get(code)
-        print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), "\n")
+        print(code, " ===>len", self.obj.GetHeaderValue(3), len(data),"\r", end="")
 
         while self.obj.Continue:
             self.obj.BlockRequest()
             nextData = self.get(code)
 
             data += nextData
-            print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), "\n")
+            print(code, " ===>len", self.obj.GetHeaderValue(3), len(data),"\r", end="")
 
         return data
 
     def get(self,code):
         self.obj.SetInputValue(0, code)  # 종목코드
         self.obj.BlockRequest()
+        rn = range(len(self.keys))
         data = []
         for idx in range(self.obj.GetHeaderValue(3)):
             item = {"code": self.obj.GetHeaderValue(0)}
-            rn = range(len(self.keys))
             for rnx in rn:
                 item[self.var[self.keys[rnx]]] = self.obj.GetDataValue(rnx, idx)
-            c = StockChartEntity(**item)
-            data.append(c)
-        print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), "\n")
+            data.append(item)
         return data
 
     def _save(self, data):
