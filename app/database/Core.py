@@ -1,3 +1,4 @@
+from collections import OrderedDict
 from typing import Generator
 
 from sqlalchemy import create_engine
@@ -18,6 +19,9 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 
 class BaseEntity(DeclarativeBase):
+
+    def dict(self):
+        return OrderedDict(sorted(self.__dict__.items(), key=lambda x: x[0]))
     pass
 
 

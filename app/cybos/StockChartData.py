@@ -13,7 +13,7 @@ class StockChartData(Cybos):
     https://money2.daishin.com/e5/mboard/ptype_basic/HTS_Plus_Helper/DW_Basic_Read_Page.aspx?boardseq=284&seq=102&page=1&searchString=StockChart&p=8839&v=8642&m=9508
     """
 
-    def __init__(self,  maxDate="20240413", minDate="19770101"):
+    def __init__(self, max_date="20240413", min_date="19770101"):
         super().__init__()
         self.obj = win32com.client.Dispatch("CpSysDib.StockChart")
 
@@ -21,57 +21,55 @@ class StockChartData(Cybos):
         self.keys = list(self.var.keys())
 
         self.obj.SetInputValue(1, ord('1'))  # 기간으로 받기
-        self.obj.SetInputValue(2, maxDate)  # To 날짜
-        self.obj.SetInputValue(3, minDate)  # From 날짜
+        self.obj.SetInputValue(2, max_date)  # To 날짜
+        self.obj.SetInputValue(3, min_date)  # From 날짜
         # self.obj.SetInputValue(4, 500)  # 최근 500일치
-
+        print(max_date, min_date)
         self.obj.SetInputValue(5, self.keys)  # 날짜,시가,고가,저가,종가,거래량
         self.obj.SetInputValue(6, ord('m'))  # '차트 주기 - 일간 차트 요청
         self.obj.SetInputValue(7, 1)  # '차트 주기 - 일간 차트 요청
 
         self.obj.SetInputValue(9, ord('1'))  # 수정주가 사용
 
-    def __call__(self,code):
+    def __call__(self, code):
         self.obj.SetInputValue(0, code)  # 종목코드
-        self.obj.BlockRequest()
         rqStatus = self.obj.GetDibStatus()
         rqRet = self.obj.GetDibMsg1()
-
-        data = self.get(code)
-        print(code, " ===>len", self.obj.GetHeaderValue(3), len(data),"\r", end="")
-
+        data = self.get()
+        self._save(data)
+        print(self.obj.GetHeaderValue(6),self.obj.GetHeaderValue(5),self.obj.GetHeaderValue(7))
+        print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"], "\r", end="")
         while self.obj.Continue:
             self.obj.BlockRequest()
-            nextData = self.get(code)
-
-            data += nextData
-            print(code, " ===>len", self.obj.GetHeaderValue(3), len(data),"\r", end="")
+            next_data = self.get()
+            self._save(next_data)
+            data += next_data
+            print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"], "\r",end="")
 
         return data
 
-    def get(self,code):
-        self.obj.SetInputValue(0, code)  # 종목코드
+    def get(self):
         self.obj.BlockRequest()
         rn = range(len(self.keys))
         data = []
+
         for idx in range(self.obj.GetHeaderValue(3)):
             item = {"code": self.obj.GetHeaderValue(0)}
             for rnx in rn:
-                item[self.var[self.keys[rnx]]] = self.obj.GetDataValue(rnx, idx)
+                key = self.var[self.keys[rnx]]
+                value = self.obj.GetDataValue(rnx, idx)
+
+                item[key] = value
             data.append(item)
         return data
 
     def _save(self, data):
         with SessionLocal() as session:
-            for d in data:
-                smpt = select(StockChartEntity).filter(and_(
-                    StockChartEntity.code == d.code, StockChartEntity.date == d.date, StockChartEntity.time == d.time))
-                c = session.execute(smpt).all()
-
-                if c.__len__() == 0:
-                    print(d.code, d.date, d.time, len(c))
-                    session.add(d)
-                    session.commit()
+            insert_stmt = insert(StockChartEntity).values(data)
+            update_dict = {x.name: x for x in insert_stmt.inserted}
+            on_duplicate_key_stmt = insert_stmt.on_duplicate_key_update(**update_dict)
+            session.execute(on_duplicate_key_stmt)
+            session.commit()
 
 
 var = {
