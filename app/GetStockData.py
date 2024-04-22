@@ -32,14 +32,18 @@ class ThreadWrapper:
 codeList = [c.code for c in get_code_name_list()]
 
 
-def getData(codeList):
+def getDataList(codeList):
+
     for code in codeList:
-        max_date = None
-        # max_date = get_min_date(code)
-        if max_date is None:
-            max_date = datetime.now().strftime('%Y%m%d')
-        task = StockChartData(max_date)
-        data = task(code)
+        getData(code)
+
+def getData(code):
+    max_date = None
+    # max_date = get_min_date(code)
+    if max_date is None:
+        max_date = datetime.now().strftime('%Y%m%d')
+    task = StockChartData(max_date)
+    data = task(code)
 
 
 
@@ -66,4 +70,7 @@ if __name__ == "__main__":
     # for p in p_list:
     #     p.start()
 
-    getData(codeList)
+    with Pool(10) as p:
+        p.map(getData, codeList)
+
+    #getDataList(codeList)
