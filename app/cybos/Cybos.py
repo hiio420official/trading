@@ -7,6 +7,7 @@ from dotenv import load_dotenv
 from pywinauto import application
 
 from app.win import Win32Function
+import psutil
 
 load_dotenv()
 
@@ -20,6 +21,9 @@ class Cybos:
         self.CERTPW = os.getenv("CERTPW")
 
     def kill_client(self):
+
+
+
         print("########## 기존 CYBOS 프로세스 강제 종료")
         os.system('taskkill /IM ncStarter* /F /T')
         os.system('taskkill /IM CpStart* /F /T')
@@ -30,8 +34,8 @@ class Cybos:
 
     def connect(self):
         if not self.connected():
-            self.disconnect()
-            self.kill_client()
+            #self.disconnect()
+            #self.kill_client()
 
             print("########## CYBOS 프로세스 자동 접속")
             app = application.Application()
@@ -39,7 +43,7 @@ class Cybos:
             app.start(
                 f'C:\\DAISHIN\\STARTER\\ncStarter.exe /prj:cp /id:{self.ID} /pwd:{self.PW} /pwdcert:{self.CERTPW} /autostart'
             )
-            noti_title = Win32Function.check_window("공지사항", 60)
+            noti_title = Win32Function.check_window("공지사항", 120)
             if noti_title != 0:
                 print("공지사항")
                 Win32Function.close_win("공지사항")
@@ -57,6 +61,16 @@ class Cybos:
     def connected(self):
         b_connected = self.g_objCpStatus.IsConnect
         if b_connected == 0:
+            return False
+        process_names = ["ncStater", "CpStart", "DibServer"]
+        pid = None
+
+        for proc in psutil.process_iter():
+            for process_name in process_names:
+                if process_name in proc.name():
+                    pid = proc.pid
+                    break
+        if pid is None:
             return False
         return True
 
