@@ -37,13 +37,19 @@ def getDataList(codeList):
     for code in codeList:
         getData(code)
 
+error_code = []
 def getData(code):
+    global error_code
     max_date = None
     # max_date = get_min_date(code)
     if max_date is None:
         max_date = datetime.now().strftime('%Y%m%d')
-    task = StockChartData(max_date)
-    data = task(code)
+    try:
+        task = StockChartData(max_date)
+        data = task(code)
+    except Exception as e:
+        with open(".\\app\\error\\"+code,"r",encoding="utf-8") as f:
+            f.write(code)
 
 
 
