@@ -52,18 +52,16 @@ class StockChartData(Cybos):
         self.obj.BlockRequest()
         rn = range(len(self.keys))
         data = []
-
         for idx in range(self.obj.GetHeaderValue(3)):
             item = {"code": self.obj.GetHeaderValue(0)}
             for rnx in rn:
                 key = self.var[self.keys[rnx]]
                 value = self.obj.GetDataValue(rnx, idx)
-
                 item[key] = value
             data.append(item)
         return data
 
-    def _save(self, data):
+    def _save_dup(self, data):
         with SessionLocal() as session:
             insert_stmt = insert(StockChartEntity).values(data)
             update_dict = {x.name: x for x in insert_stmt.inserted}
@@ -71,7 +69,16 @@ class StockChartData(Cybos):
             session.execute(on_duplicate_key_stmt)
             session.commit()
 
-
+    def _save(self,data_list):
+        with SessionLocal() as session:
+            i = 0
+            for data in data_list:
+                result = session.query(StockChartEntity).filter(and_(StockChartEntity.code == data["code"], StockChartEntity.date==data["date"], StockChartEntity.time==data["time"])).all()
+                if len(result) == 0:
+                    session.add(StockChartEntity(**data))
+                    session.commit()
+                    i+=1
+            print(len(data_list), " ===>len", i, "\r",end="")
 var = {
     "0": "date",
     "1": "time",

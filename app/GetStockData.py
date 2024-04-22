@@ -48,8 +48,9 @@ def getData(code):
         task = StockChartData(max_date)
         data = task(code)
     except Exception as e:
-        with open(".\\app\\error\\"+code,"r",encoding="utf-8") as f:
-            f.write(code)
+        print(code,str(e))
+        with open(".\\app\\error\\"+code+".txt","w",encoding="utf-8") as f:
+            f.write(str(e))
 
 
 
@@ -75,8 +76,8 @@ if __name__ == "__main__":
     # print(len(codeList), "-=>", ck)
     # for p in p_list:
     #     p.start()
-
+    #
     with Pool(10) as p:
         p.map(getData, codeList)
 
-    #getDataList(codeList)
+    # getData(codeList[0])
