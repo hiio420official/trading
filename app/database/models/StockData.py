@@ -7,8 +7,8 @@ from ..Core import BaseEntity
 class StockChartEntity(BaseEntity):
     __tablename__ = 'TB_STOCK_CHART'
 
-    code = Column("CODE", String(20), ForeignKey('TB_STOCK_CODE.CODE'), comment="코드")
-    codeItem = relationship("StockCodeEntity", backref="stockChart")
+    code = Column("CODE", String(20),  comment="코드")
+    codeItem = relationship("StockCodeEntity",foreign_keys="StockCodeEntity.code",primaryjoin="StockCodeEntity.code == StockChartEntity.code", backref="stockChart")
     date = Column("DATE", Integer,default=0.0)
     time = Column("TIME", Integer, default=0.0)
     open = Column("OPEN", DOUBLE, default=0.0)
