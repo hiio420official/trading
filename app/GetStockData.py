@@ -4,7 +4,7 @@ from datetime import datetime
 from app.database.service.StockService import update_stock_data_record
 from .cybos.StockChartData import StockChartData
 from .database.service.CodeService import get_code_name_list
-
+from multiprocessing import Pool
 
 class ThreadWrapper:
     def __init__(self, code_list):
@@ -68,7 +68,7 @@ if __name__ == "__main__":
     # for p in p_list:
     #     p.start()
     #
-    # with Pool(10) as p:
-    #     p.map(getData, codeList)
+    with Pool(10) as p:
+        p.map(getData, codeList)
 
-    getData(codeList[1235])
+    # getData(codeList[1235])

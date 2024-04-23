@@ -76,7 +76,8 @@ class StockChartData(Cybos):
             max_dt = 0
             min_dt = 99999999999999
             for data in data_list:
-                code = data["code"]
+                if data["code"] != "":
+                    code = data["code"]
                 date = data["date"]
                 time = data["time"]
                 dt = int(str(date) + str(time).zfill(2))
@@ -91,16 +92,17 @@ class StockChartData(Cybos):
                     session.add(StockChartEntity(**data))
                     session.commit()
                     i += 1
-            data = {"code": code, "minDatetime": min_dt, "maxDatetime": max_dt}
-            row = select_stock_data_record(code)
-            if row is None:
-                insert_stock_data_record(data)
-            else:
-                if max_dt > row.maxDatetime:
-                    update_stock_data_record({"code": code, "maxDatetime": max_dt})
-                if min_dt < row.minDatetime:
-                    update_stock_data_record({"code": code, "minDatetime": min_dt})
-            print(len(data_list), " ===>len", i, "\r", end="")
+            if code != "":
+                data = {"code": code, "minDatetime": min_dt, "maxDatetime": max_dt}
+                row = select_stock_data_record(code)
+                if row is None:
+                    insert_stock_data_record(data)
+                else:
+                    if max_dt > row.maxDatetime:
+                        update_stock_data_record({"code": code, "maxDatetime": max_dt})
+                    if min_dt < row.minDatetime:
+                        update_stock_data_record({"code": code, "minDatetime": min_dt})
+                print(len(data_list), " ===>len", i, "\r", end="")
 
 
 var = {
