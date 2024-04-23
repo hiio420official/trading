@@ -5,7 +5,7 @@ from sqlalchemy.dialects.mysql import insert
 from .Cybos import Cybos
 from ..database.Core import SessionLocal
 from ..database.models.StockData import StockChartEntity
-from ..database.service.StockService import insert_stock_data_record
+from ..database.service.StockService import insert_stock_data_record, select_stock_data_record, update_stock_data_record
 
 
 class StockChartData(Cybos):
@@ -44,7 +44,8 @@ class StockChartData(Cybos):
             next_data = self.get()
             self._save(next_data)
             data += next_data
-            print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"], "\r",end="")
+            print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"], "\r",
+                  end="")
         return data
 
     def get(self):
@@ -72,22 +73,17 @@ class StockChartData(Cybos):
         with SessionLocal() as session:
             i = 0
             code = ""
-            max_date = 0
-            min_date = 99999999
-            max_time = 0
-            min_time = 99999999
+            max_dt = 0
+            min_dt = 99999999999999
             for data in data_list:
                 code = data["code"]
                 date = data["date"]
                 time = data["time"]
-                if date > max_date:
-                    max_date = date
-                if date < min_date:
-                    min_date = date
-                if time > max_time:
-                    max_time = time
-                if time < min_time:
-                    min_time = time
+                dt = int(str(date) + str(time).zfill(2))
+                if dt > max_dt:
+                    max_dt = dt
+                if dt < min_dt:
+                    min_dt = dt
                 result = session.query(StockChartEntity).filter(
                     and_(StockChartEntity.code == data["code"], StockChartEntity.date == data["date"],
                          StockChartEntity.time == data["time"])).all()
@@ -95,9 +91,16 @@ class StockChartData(Cybos):
                     session.add(StockChartEntity(**data))
                     session.commit()
                     i += 1
-            if i > 0 and code != "" and date != "":
-                insert_stock_data_record(
-                    {"code": code, "maxDate": max_date, "minDate": min_date,"maxTime":max_time,"minTime":min_time})
+            if i > 0:
+                data = {"code": code, "minDatetime": min_dt, "maxDatetime": max_dt}
+                row = select_stock_data_record(code)
+                if row is None:
+                    insert_stock_data_record(data)
+                else:
+                    if max_dt > row.maxDatetime:
+                        update_stock_data_record({"code": code, "maxDatetime": max_dt})
+                    if min_dt < row.minDatetime:
+                        update_stock_data_record({"code": code, "minDatetime": min_dt})
                 print(len(data_list), " ===>len", i, "\r", end="")
 
 

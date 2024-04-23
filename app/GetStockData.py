@@ -1,18 +1,9 @@
-import asyncio
-
-from sqlalchemy import select, func, and_
-from sqlalchemy.dialects.mysql import insert
-
-from app.database.service.StockService import insert_stock_data_record
-from .cybos.StockChartData import StockChartData
-from threading import Thread
 import time
 from datetime import datetime
-from .database import StockCodeEntity, StockChartEntity
-from .database.Core import SessionLocal
-from multiprocessing import Pool, cpu_count, Process
 
-from .database.service.CodeService import get_code_name_list, get_min_date
+from app.database.service.StockService import update_stock_data_record
+from .cybos.StockChartData import StockChartData
+from .database.service.CodeService import get_code_name_list
 
 
 class ThreadWrapper:
@@ -50,10 +41,10 @@ def getData(code):
     try:
         task = StockChartData(max_date)
         data = task(code)
-        insert_stock_data_record({"code": code, "total": len(data)})
+        update_stock_data_record({"code": code, "total": len(data),"errorLog": ""})
     except Exception as e:
         print(code, str(e))
-        insert_stock_data_record({"code": code, "errorLog": str(e)})
+        update_stock_data_record({"code": code, "errorLog": str(e)})
 
 
 if __name__ == "__main__":
