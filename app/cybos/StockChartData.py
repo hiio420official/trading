@@ -1,10 +1,11 @@
 import win32com.client
-from sqlalchemy import select, and_
+from sqlalchemy import and_
 from sqlalchemy.dialects.mysql import insert
 
 from .Cybos import Cybos
 from ..database.Core import SessionLocal
 from ..database.models.StockData import StockChartEntity
+from ..database.service.StockService import insert_stock_data_record
 
 
 class StockChartData(Cybos):
@@ -37,7 +38,6 @@ class StockChartData(Cybos):
         rqRet = self.obj.GetDibMsg1()
         data = self.get()
         self._save(data)
-        print(self.obj.GetHeaderValue(6),self.obj.GetHeaderValue(5),self.obj.GetHeaderValue(7))
         print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"], "\r", end="")
         while self.obj.Continue:
             self.obj.BlockRequest()
@@ -45,7 +45,6 @@ class StockChartData(Cybos):
             self._save(next_data)
             data += next_data
             print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"], "\r",end="")
-
         return data
 
     def get(self):
@@ -69,16 +68,39 @@ class StockChartData(Cybos):
             session.execute(on_duplicate_key_stmt)
             session.commit()
 
-    def _save(self,data_list):
+    def _save(self, data_list):
         with SessionLocal() as session:
             i = 0
+            code = ""
+            max_date = 0
+            min_date = 99999999
+            max_time = 0
+            min_time = 99999999
             for data in data_list:
-                result = session.query(StockChartEntity).filter(and_(StockChartEntity.code == data["code"], StockChartEntity.date==data["date"], StockChartEntity.time==data["time"])).all()
+                code = data["code"]
+                date = data["date"]
+                time = data["time"]
+                if date > max_date:
+                    max_date = date
+                if date < min_date:
+                    min_date = date
+                if time > max_time:
+                    max_time = time
+                if time < min_time:
+                    min_time = time
+                result = session.query(StockChartEntity).filter(
+                    and_(StockChartEntity.code == data["code"], StockChartEntity.date == data["date"],
+                         StockChartEntity.time == data["time"])).all()
                 if len(result) == 0:
                     session.add(StockChartEntity(**data))
                     session.commit()
-                    i+=1
-            print(len(data_list), " ===>len", i, "\r",end="")
+                    i += 1
+            if i > 0 and code != "" and date != "":
+                insert_stock_data_record(
+                    {"code": code, "maxDate": max_date, "minDate": min_date,"maxTime":max_time,"minTime":min_time})
+                print(len(data_list), " ===>len", i, "\r", end="")
+
+
 var = {
     "0": "date",
     "1": "time",

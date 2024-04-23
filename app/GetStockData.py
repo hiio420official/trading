@@ -3,6 +3,7 @@ import asyncio
 from sqlalchemy import select, func, and_
 from sqlalchemy.dialects.mysql import insert
 
+from app.database.service.StockService import insert_stock_data_record
 from .cybos.StockChartData import StockChartData
 from threading import Thread
 import time
@@ -33,11 +34,13 @@ codeList = [c.code for c in get_code_name_list()]
 
 
 def getDataList(codeList):
-
     for code in codeList:
         getData(code)
 
+
 error_code = []
+
+
 def getData(code):
     global error_code
     max_date = None
@@ -47,13 +50,10 @@ def getData(code):
     try:
         task = StockChartData(max_date)
         data = task(code)
+        insert_stock_data_record({"code": code, "total": len(data)})
     except Exception as e:
-        print(code,str(e))
-        with open(".\\app\\error\\"+code+".txt","w",encoding="utf-8") as f:
-            f.write(str(e))
-
-
-
+        print(code, str(e))
+        insert_stock_data_record({"code": code, "errorLog": str(e)})
 
 
 if __name__ == "__main__":
@@ -77,7 +77,7 @@ if __name__ == "__main__":
     # for p in p_list:
     #     p.start()
     #
-    with Pool(10) as p:
-        p.map(getData, codeList)
+    # with Pool(10) as p:
+    #     p.map(getData, codeList)
 
-    # getData(codeList[0])
+    getData(codeList[1235])
