@@ -68,7 +68,7 @@ if __name__ == "__main__":
     # for p in p_list:
     #     p.start()
     #
-    with Pool(10) as p:
-        p.map(getData, codeList)
+    # with Pool(10) as p:
+    #     p.map(getData, codeList)
 
-    # getData(codeList[1235])
+    getData(codeList[1235])
