@@ -35,7 +35,10 @@ error_code = []
 def getData(code):
     global error_code
     record = select_stock_data_record(code)
-    min_date = str(record.maxDatetime)[:8]
+    if record is not None:
+        min_date = str(record.maxDatetime)[:8]
+    else:
+        min_date = "19770101"
     max_date = datetime.now().strftime('%Y%m%d')
     try:
         task = StockChartData(max_date,min_date)
