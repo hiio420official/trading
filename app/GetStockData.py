@@ -34,23 +34,22 @@ error_code = []
 
 def getData(code):
     global error_code
-    max_date = None
     record = select_stock_data_record(code)
-    print(record.maxDatetime)
-    # if max_date is None:
-    #     max_date = datetime.now().strftime('%Y%m%d')
-    # try:
-    #     task = StockChartData(max_date)
-    #     data = task(code)
-    #     update_stock_data_record({"code": code, "total": len(data),"errorLog": ""})
-    # except Exception as e:
-    #     print(code, str(e))
-    #     update_stock_data_record({"code": code, "errorLog": str(e)})
+    min_date = str(record.maxDatetime)[:8]
+    max_date = datetime.now().strftime('%Y%m%d')
+    try:
+        task = StockChartData(max_date,min_date)
+        data = task(code)
+        update_stock_data_record({"code": code, "total": len(data),"errorLog": ""})
+    except Exception as e:
+        print(code, str(e))
+        update_stock_data_record({"code": code, "errorLog": str(e)})
 
 
 if __name__ == "__main__":
 
-    # with Pool(10) as p:
-    #     p.map(getData, codeList)
+    with Pool(10) as p:
+        p.map(getData, codeList)
 
-    getData(codeList[1235])
+    # getData(codeList[1235])
+    # print(codeList[1235])
