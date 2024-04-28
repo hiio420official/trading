@@ -61,8 +61,12 @@ def getData(code):
 
 
 if __name__ == "__main__":
-    with Pool(10) as p:
-        p.map(getData, codeList)
-
+    # with Pool(10) as p:
+    #     p.map(getData, codeList)
+    i = 0
+    for code in codeList:
+        getData(code)
+        i += 1
+        print(i,code)
     # getData(codeList[0])
     # print(codeList[1235])
