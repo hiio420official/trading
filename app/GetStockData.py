@@ -6,6 +6,7 @@ from .cybos.StockChartData import StockChartData
 from .database.service.CodeService import get_code_name_list
 from multiprocessing import Pool
 
+
 class ThreadWrapper:
     def __init__(self, code_list):
         self.code_list = code_list
@@ -39,26 +40,29 @@ def getData(code):
     max_date = datetime.now().strftime('%Y%m%d')
     if record is not None:
         min_date = str(record.maxDatetime)[:8]
-        date_list.append({"max_date":max_date,"min_date":min_date})
-        date_list.append({"max_date":str(record.minDatetime)[:8],"min_date":"19770101"})
+        if max_date > min_date:
+            date_list.append({"max_date": "", "min_date": min_date})
+        else:
+            date_list.append({"max_date": "", "min_date": max_date})
+
+        date_list.append({"max_date": str(record.minDatetime)[:8], "min_date": "19770101"})
     else:
-        date_list.append({"max_date":max_date,"min_date":"19770101"})
+        date_list.append({"max_date": max_date, "min_date": "19770101"})
 
     try:
         for dl in date_list:
             print(dl)
-            task = StockChartData(dl["max_date"],dl["min_date"])
+            task = StockChartData(dl["max_date"], dl["min_date"])
             data = task(code)
-            update_stock_data_record({"code": code, "total": len(data),"errorLog": ""})
+            update_stock_data_record({"code": code, "total": len(data), "errorLog": ""})
     except Exception as e:
         print(code, str(e))
         update_stock_data_record({"code": code, "errorLog": str(e)})
 
 
 if __name__ == "__main__":
-
     with Pool(10) as p:
         p.map(getData, codeList)
 
-    # getData(codeList[1235])
+    # getData(codeList[0])
     # print(codeList[1235])

@@ -22,7 +22,8 @@ class StockChartData(Cybos):
         self.keys = list(self.var.keys())
 
         self.obj.SetInputValue(1, ord('1'))  # 기간으로 받기
-        self.obj.SetInputValue(2, max_date)  # To 날짜
+        if max_date != "":
+            self.obj.SetInputValue(2, max_date)  # To 날짜
         self.obj.SetInputValue(3, min_date)  # From 날짜
         # self.obj.SetInputValue(4, 500)  # 최근 500일치
         print(max_date, min_date)
@@ -37,18 +38,19 @@ class StockChartData(Cybos):
         rqStatus = self.obj.GetDibStatus()
         rqRet = self.obj.GetDibMsg1()
         data = self.get()
-        self._save(data)
-        if len(data)>0:
-            print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"], "\r", end="")
+        # self._save(data)
+        # if len(data)>0:
+        #     print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"], "\r", end="")
+        print(code,"\tfirst\t",len(data))
         while self.obj.Continue:
             self.obj.BlockRequest()
             next_data = self.get()
-            self._save(next_data)
-            data += next_data
-            if len(data) > 0:
-                print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"], "\r",
-                      end="")
 
+            data += next_data
+            print(code, "\tContinue\t",len(data))
+        if len(data) > 0:
+            print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"])
+        self._save(data)
         return data
 
     def get(self):
@@ -105,7 +107,7 @@ class StockChartData(Cybos):
                         update_stock_data_record({"code": code, "maxDatetime": max_dt})
                     if min_dt < row.minDatetime:
                         update_stock_data_record({"code": code, "minDatetime": min_dt})
-                print(len(data_list), " ===>len", i, "\r", end="")
+                print(min_dt,max_dt, " ===>len", i, "\r", end="")
 
 
 var = {
