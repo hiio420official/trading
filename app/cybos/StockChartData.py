@@ -38,14 +38,17 @@ class StockChartData(Cybos):
         rqRet = self.obj.GetDibMsg1()
         data = self.get()
         self._save(data)
-        print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"], "\r", end="")
+        if len(data)>0:
+            print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"], "\r", end="")
         while self.obj.Continue:
             self.obj.BlockRequest()
             next_data = self.get()
             self._save(next_data)
             data += next_data
-            print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"], "\r",
-                  end="")
+            if len(data) > 0:
+                print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"], "\r",
+                      end="")
+
         return data
 
     def get(self):

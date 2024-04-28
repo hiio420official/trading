@@ -35,15 +35,21 @@ error_code = []
 def getData(code):
     global error_code
     record = select_stock_data_record(code)
+    date_list = []
+    max_date = datetime.now().strftime('%Y%m%d')
     if record is not None:
         min_date = str(record.maxDatetime)[:8]
+        date_list.append({"max_date":max_date,"min_date":min_date})
+        date_list.append({"max_date":str(record.minDatetime)[:8],"min_date":"19770101"})
     else:
-        min_date = "19770101"
-    max_date = datetime.now().strftime('%Y%m%d')
+        date_list.append({"max_date":max_date,"min_date":"19770101"})
+
     try:
-        task = StockChartData(max_date,min_date)
-        data = task(code)
-        update_stock_data_record({"code": code, "total": len(data),"errorLog": ""})
+        for dl in date_list:
+            print(dl)
+            task = StockChartData(dl["max_date"],dl["min_date"])
+            data = task(code)
+            update_stock_data_record({"code": code, "total": len(data),"errorLog": ""})
     except Exception as e:
         print(code, str(e))
         update_stock_data_record({"code": code, "errorLog": str(e)})
