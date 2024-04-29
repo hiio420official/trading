@@ -38,14 +38,11 @@ class StockChartData(Cybos):
         self.obj.SetInputValue(0, code)  # 종목코드
         rqStatus = self.obj.GetDibStatus()
         rqRet = self.obj.GetDibMsg1()
-        data = self.get()
-        # self._save(data)
-        # if len(data)>0:
-        #     print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"], "\r", end="")
+        data = self.get(code)
         print(code, "\tfirst\t", len(data))
         while self.obj.Continue:
             self.obj.BlockRequest()
-            next_data = self.get()
+            next_data = self.get(code)
 
             data += next_data
             print(code, "\tContinue\t", len(data))
@@ -54,12 +51,12 @@ class StockChartData(Cybos):
         self._save(data)
         return data
 
-    def get(self):
+    def get(self,code):
         self.obj.BlockRequest()
         rn = range(len(self.keys))
         data = []
         for idx in range(self.obj.GetHeaderValue(3)):
-            item = {"code": self.obj.GetHeaderValue(0)}
+            item = {"code":code}
             for rnx in rn:
                 key = self.var[self.keys[rnx]]
                 value = self.obj.GetDataValue(rnx, idx)
