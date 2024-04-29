@@ -5,7 +5,8 @@ from sqlalchemy.dialects.mysql import insert
 from .Cybos import Cybos
 from ..database.Core import SessionLocal
 from ..database.models.StockData import StockChartEntity
-from ..database.service.StockService import insert_stock_data_record, select_stock_data_record, update_stock_data_record
+from ..database.service.StockService import insert_stock_data_record, select_stock_data_record, \
+    update_stock_data_record, select_stock_data
 
 
 class StockChartData(Cybos):
@@ -41,13 +42,13 @@ class StockChartData(Cybos):
         # self._save(data)
         # if len(data)>0:
         #     print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"], "\r", end="")
-        print(code,"\tfirst\t",len(data))
+        print(code, "\tfirst\t", len(data))
         while self.obj.Continue:
             self.obj.BlockRequest()
             next_data = self.get()
 
             data += next_data
-            print(code, "\tContinue\t",len(data))
+            print(code, "\tContinue\t", len(data))
         if len(data) > 0:
             print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"])
         self._save(data)
@@ -90,9 +91,7 @@ class StockChartData(Cybos):
                     max_dt = dt
                 if dt < min_dt:
                     min_dt = dt
-                result = session.query(StockChartEntity).filter(
-                    and_(StockChartEntity.code == data["code"], StockChartEntity.date == data["date"],
-                         StockChartEntity.time == data["time"])).all()
+                result = select_stock_data(data)
                 if len(result) == 0:
                     session.add(StockChartEntity(**data))
                     session.commit()
@@ -107,7 +106,7 @@ class StockChartData(Cybos):
                         update_stock_data_record({"code": code, "maxDatetime": max_dt})
                     if min_dt < row.minDatetime:
                         update_stock_data_record({"code": code, "minDatetime": min_dt})
-                print(min_dt,max_dt, " ===>len", i, "\r", end="")
+                print(min_dt, max_dt, " ===>len", i, "\r", end="")
 
 
 var = {
