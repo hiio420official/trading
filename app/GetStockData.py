@@ -51,7 +51,6 @@ def getData(code):
 
     try:
         for dl in date_list:
-            print(dl)
             task = StockChartData(dl["max_date"], dl["min_date"])
             data = task(code)
             update_stock_data_record({"code": code, "total": len(data), "errorLog": ""})
