@@ -5,7 +5,8 @@ from sqlalchemy.dialects.mysql import insert
 from .Cybos import Cybos
 from ..database.Core import SessionLocal
 from ..database.models.StockData import StockChartEntity
-from ..database.service.StockService import insert_stock_data_record, select_stock_data_record, update_stock_data_record
+from ..database.service.StockService import insert_stock_data_record, select_stock_data_record, \
+    update_stock_data_record, select_stock_data, insert_stock_data
 
 
 class StockChartData(Cybos):
@@ -37,30 +38,24 @@ class StockChartData(Cybos):
         self.obj.SetInputValue(0, code)  # 종목코드
         rqStatus = self.obj.GetDibStatus()
         rqRet = self.obj.GetDibMsg1()
-        data = self.get()
-        self._save(data)
-        # self._save(data)
-        # if len(data)>0:
-        #     print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"], "\r", end="")
-        print(code,"\tfirst\t",len(data))
+        data = self.get(code)
+        print(code, "\tfirst\t", len(data))
         while self.obj.Continue:
-            self.obj.BlockRequest()
-            next_data = self.get()
+            next_data = self.get(code)
 
             data += next_data
-            self._save(next_data)
-            print(code, "\tContinue\t",len(data))
-            if len(data) > 0:
-                print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"])
-
+            print(code, "\tContinue\t", len(data))
+        if len(data) > 0:
+            print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"])
+        self._save(data)
         return data
 
-    def get(self):
+    def get(self,code):
         self.obj.BlockRequest()
         rn = range(len(self.keys))
         data = []
         for idx in range(self.obj.GetHeaderValue(3)):
-            item = {"code": self.obj.GetHeaderValue(0)}
+            item = {"code":code}
             for rnx in rn:
                 key = self.var[self.keys[rnx]]
                 value = self.obj.GetDataValue(rnx, idx)
@@ -77,39 +72,35 @@ class StockChartData(Cybos):
             session.commit()
 
     def _save(self, data_list):
-        with SessionLocal() as session:
-            i = 0
-            code = ""
-            max_dt = 0
-            min_dt = 99999999999999
-            for data in data_list:
-                if data["code"] != "":
-                    code = data["code"]
-                date = data["date"]
-                time = data["time"]
-                dt = int(str(date) + str(time).zfill(2))
-                if dt > max_dt:
-                    max_dt = dt
-                if dt < min_dt:
-                    min_dt = dt
-                result = session.query(StockChartEntity).filter(
-                    and_(StockChartEntity.code == data["code"], StockChartEntity.date == data["date"],
-                         StockChartEntity.time == data["time"])).all()
-                if len(result) == 0:
-                    session.add(StockChartEntity(**data))
-                    session.commit()
-                    i += 1
-            if code != "":
-                data = {"code": code, "minDatetime": min_dt, "maxDatetime": max_dt}
-                row = select_stock_data_record(code)
-                if row is None:
-                    insert_stock_data_record(data)
-                else:
-                    if max_dt > row.maxDatetime:
-                        update_stock_data_record({"code": code, "maxDatetime": max_dt})
-                    if min_dt < row.minDatetime:
-                        update_stock_data_record({"code": code, "minDatetime": min_dt})
-                print(min_dt,max_dt, " ===>len", i)
+        i = 0
+        code = ""
+        max_dt = 0
+        min_dt = 99999999999999
+        for data in data_list:
+            if data["code"] != "":
+                code = data["code"]
+            date = data["date"]
+            time = data["time"]
+            dt = int(str(date) + str(time).zfill(2))
+            if dt > max_dt:
+                max_dt = dt
+            if dt < min_dt:
+                min_dt = dt
+            result = select_stock_data(data)
+            if len(result) == 0:
+                insert_stock_data(data)
+                i += 1
+        if code != "":
+            data = {"code": code, "minDatetime": min_dt, "maxDatetime": max_dt}
+            row = select_stock_data_record(code)
+            if row is None:
+                insert_stock_data_record(data)
+            else:
+                if max_dt > row.maxDatetime:
+                    update_stock_data_record({"code": code, "maxDatetime": max_dt})
+                if min_dt < row.minDatetime:
+                    update_stock_data_record({"code": code, "minDatetime": min_dt})
+            print(min_dt, max_dt, " ===>len", i, "\r", end="")
 
 
 var = {

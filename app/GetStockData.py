@@ -68,5 +68,5 @@ if __name__ == "__main__":
         getData(code)
         i += 1
         print(i,code)
-    # getData(codeList[0])
+    # getData("A092220")
     # print(codeList[1235])
