@@ -38,6 +38,7 @@ class StockChartData(Cybos):
         rqStatus = self.obj.GetDibStatus()
         rqRet = self.obj.GetDibMsg1()
         data = self.get()
+        self._save(data)
         # self._save(data)
         # if len(data)>0:
         #     print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"], "\r", end="")
@@ -47,10 +48,11 @@ class StockChartData(Cybos):
             next_data = self.get()
 
             data += next_data
+            self._save(next_data)
             print(code, "\tContinue\t",len(data))
-        if len(data) > 0:
-            print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"])
-        self._save(data)
+            if len(data) > 0:
+                print(code, " ===>len", self.obj.GetHeaderValue(3), len(data), data[-1]["date"], data[0]["date"])
+
         return data
 
     def get(self):
@@ -107,7 +109,7 @@ class StockChartData(Cybos):
                         update_stock_data_record({"code": code, "maxDatetime": max_dt})
                     if min_dt < row.minDatetime:
                         update_stock_data_record({"code": code, "minDatetime": min_dt})
-                print(min_dt,max_dt, " ===>len", i, "\r", end="")
+                print(min_dt,max_dt, " ===>len", i)
 
 
 var = {
